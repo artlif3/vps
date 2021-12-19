@@ -16,16 +16,13 @@ wget -q 'https://raw.githubusercontent.com/lodixyruss1/LODIxyrussL2TP/master/upd
 # Script name
 MyScriptName='LODIxyrussScript'
 
-# OpenSSH Ports
+Dropbear_Port1='800'
+Dropbear_Port2='888'
 SSH_Port1='22'
-SSH_Port2='225'
+SSH_Port2='885'
 
 # Your SSH Banner
 SSH_Banner='https://fakenetvpn.com/raw/amy_script_banner.json'
-
-# Dropbear Ports
-Dropbear_Port1='844'
-Dropbear_Port2='843'
 
 # Stunnel Ports
 Stunnel_Port1='445' # through Dropbear
@@ -87,7 +84,7 @@ MyVPS_Time='Asia/Kuala_Lumpur'
  apt-get update -y
  apt-get install openvpn -y
 
-function InstSSH(){
+
  # Removing some duplicated sshd server configs
  rm -f /etc/ssh/sshd_config*
  
@@ -162,7 +159,6 @@ MyDropbear
  
  # Restarting dropbear service
  systemctl restart dropbear
-}
 
 # install stunnel
 apt install stunnel4 -y
@@ -175,10 +171,10 @@ socket = r:TCP_NODELAY=1
 
 [dropbear]
 accept = 445
-connect = 127.0.0.1:844
+connect = 127.0.0.1:800
 
 [openssh]
-accept = 444
+accept = 777
 connect = 127.0.0.1:22
 
 [openvpn]
