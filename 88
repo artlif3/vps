@@ -162,6 +162,7 @@ MyDropbear
  
  # Restarting dropbear service
  systemctl restart dropbear
+}
 
 # install stunnel
 apt install stunnel4 -y
@@ -173,12 +174,12 @@ socket = l:TCP_NODELAY=1
 socket = r:TCP_NODELAY=1
 
 [dropbear]
-accept = Stunnel_Port1
-connect = 127.0.0.1:dropbear_port_c
+accept = 445
+connect = 127.0.0.1:844
 
 [openssh]
-accept = Stunnel_Port2
-connect = 127.0.0.1:openssh_port_c
+accept = 444
+connect = 127.0.0.1:22
 
 [openvpn]
 accept = 587
@@ -196,8 +197,6 @@ cat key.pem cert.pem >> /etc/stunnel/stunnel.pem
 sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 cd
-
-}
 
 function InsOpenVPN(){
  # Checking if openvpn folder is accidentally deleted or purged
