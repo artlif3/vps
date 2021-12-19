@@ -25,7 +25,7 @@ Ohp_Port='7752'
 # Stunnel_Port2='440' # through OpenSSH
 
 # OpenVPN Ports
-OpenVPN_Port1='323333'
+OpenVPN_Port1='32333'
 OpenVPN_Port2='25222' # take note when you change this port, openvpn sun noload config will not work
 
 # Privoxy Ports (must be 1024 or higher)
@@ -816,7 +816,7 @@ connect = 127.0.0.1:22
 
 [openvpn]
 accept = 587
-connect = 127.0.0.1:323333
+connect = 127.0.0.1:32333
 
 END
 
@@ -860,7 +860,7 @@ fi
 
 #PORT SERVER
 read -e -p 'Input your Server IP: ' -i $SERVER_IP SERVER_IP
-read -e -p 'Input OpenVPN TCP Port: ' -i '323333' OPENVPN_PORT
+read -e -p 'Input OpenVPN TCP Port: ' -i '32333' OPENVPN_PORT
 read -e -p 'Input Privoxy Port: ' -i '8080' PRIVOXY_PORT
 read -e -p 'Input ohpserver Port: ' -i '7752' OHP_PORT
 read -e -p 'Input stunnel Port: ' -i '443' STUNNEL_PORT
