@@ -10,6 +10,7 @@ SSH_Port2='885'
 OvpnDownload_Port='85'
 MyVPS_Time='Asia/Kuala_Lumpur'
 #############################
+ SSH_Banner='https://pastebin.com/raw/H7iNhF7m'
  apt-get update
  apt-get upgrade -y
  apt-get install nginx 
