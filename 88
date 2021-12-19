@@ -1127,14 +1127,6 @@ fi
  echo -e "Configuring ssh..."
  InstSSH
  
- # Configure Stunnel
- echo -e "Configuring stunnel..."
- InsStunnel
- 
- # Configure Webmin
- echo -e "Configuring webmin..."
- InstWebmin
- 
  # Configure Privoxy and Squid
  echo -e "Configuring proxy..."
  InsProxy
