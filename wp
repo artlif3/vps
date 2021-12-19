@@ -123,7 +123,7 @@ accept = 445
 connect = 127.0.0.1:800
 
 [openssh]
-accept = 443
+accept = 777
 connect = 127.0.0.1:22
 
 [openvpn]
