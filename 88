@@ -1117,11 +1117,7 @@ fi
  # Begin Installation by Updating and Upgrading machine and then Installing all our wanted packages/services to be install.
  ScriptMessage
  sleep 2
- 
- # Configure OpenSSH and Dropbear
- echo -e "Configuring ssh..."
- InstSSH
- 
+
  # Configure Privoxy and Squid
  echo -e "Configuring proxy..."
  InsProxy
