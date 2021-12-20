@@ -519,35 +519,7 @@ fi
  systemctl restart openvpn@server_udp
 
 
-# Removing Duplicate Squid config
-rm -rf /etc/squid/squid.con*
-
-# Squid Ports (must be 1024 or higher)
- Proxy_Port='8000'
- cat <<mySquid > /etc/squid/squid.conf
-acl VPN dst $(wget -4qO- http://ipinfo.io/ip)/32
-http_access allow VPN
-http_access deny all 
-http_port 0.0.0.0:$Proxy_Port
-coredump_dir /var/spool/squid
-dns_nameservers 1.1.1.1 1.0.0.1
-refresh_pattern ^ftp: 1440 20% 10080
-refresh_pattern ^gopher: 1440 0% 1440
-refresh_pattern -i (/cgi-bin/|\?) 0 0% 0
-refresh_pattern . 0 20% 4320
-visible_hostname localhost
-mySquid
-
-
-# setting
-#MYIP=$(wget -qO- ipv4.icanhazip.com);
-#MYIP2="s|xxxxxxxxx|$MYIP|g";
-# sed -i "s|xxxxxxxxx|$MYIP|g" /etc/squid/squid.conf
-
-sed -i "s|SquidCacheHelper|$Privoxy_Port1|g" /etc/squid/squid.conf
-
-echo -e "Restarting proxy server..."
-systemctl restart squid
+wget https://raw.githubusercontent.com/Vpaproject/vps/main/sq && bash sq
 
 cat <<EOF152> /var/www/openvpn/tcp.ovpn
 # Credits to GakodX
