@@ -1,7 +1,4 @@
-apt install dropbear stunnel4 privoxy ca-certificates nginx ruby apt-transport-https lsb-release squid jq tcpdump dsniff grepcidr screenfetch -y 2>/dev/null
-
-apt install perl libnet-ssleay-perl libauthen-pam-perl libpam-runtime libio-pty-perl apt-show-versions python dbus libxml-parser-perl shared-mime-info -y 2>/dev/null
-
+apt install nginx
 
 cat <<'EOFnginx' > /etc/nginx/conf.d/bonveio-ovpn-config.conf
 # BonvScripts
@@ -10,7 +7,7 @@ cat <<'EOFnginx' > /etc/nginx/conf.d/bonveio-ovpn-config.conf
 # https://phcorner.net/threads/739298
 #
 server {
- listen 0.0.0.0:86;
+ listen 0.0.0.0:80;
  server_name localhost;
  root /var/www/openvpn;
  index index.html;
@@ -21,20 +18,22 @@ rm -rf /etc/nginx/sites-*
 rm -rf /usr/share/nginx/html
 rm -rf /var/www/openvpn
 mkdir -p /var/www/openvpn
+wget https://raw.githubusercontent.com/GakodArmy/teli/main/index.html
+cp index.html /var/www/openvpn
 
 echo -e "[\e[32mInfo\e[0m] Creating OpenVPN client configs.."
 
-cat <<'mySiteOvpn' > /var/www/openvpn/index.html
-<!DOCTYPE html>
-<html lang="en">
-<!-- Simple OVPN Download site by Bonveio Abitona -->
-<head><meta charset="utf-8" /><title>MyScriptName OVPN Config Download</title><meta name="description" content="MyScriptName Server" /><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" /><meta name="theme-color" content="#000000" /><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"><link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.3/css/mdb.min.css" rel="stylesheet"></head><body><div class="container justify-content-center" style="margin-top:9em;margin-bottom:5em;"><div class="col-md"><div class="view"><img src="https://openvpn.net/wp-content/uploads/openvpn.jpg" class="card-img-top"><div class="mask rgba-white-slight"></div></div><div class="card"><div class="card-body"><h5 class="card-title">Config List</h5><br /><ul class="list-group">
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Globe/TM <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For EZ/GS Promo with WNP,SNS,FB and IG freebies</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/GTMConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For TU Promos</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Modem</span><br /><small> Without Promo/Noload</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunNoloadConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-<li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>OHPServer + TCP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> Good for Payload Experiments and Bughost hunting(BETA)</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/OHPTCPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p> Sample UDP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> More faster than TCP. Low latency, fast upload/download speed.</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/UDPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
-</ul></div></div></div></div></body></html>
-mySiteOvpn
+# cat <<'mySiteOvpn' > /var/www/openvpn/index.html
+# <!DOCTYPE html>
+# <html lang="en">
+# <!-- Simple OVPN Download site by Bonveio Abitona -->
+# <head><meta charset="utf-8" /><title>MyScriptName OVPN Config Download</title><meta name="description" content="MyScriptName Server" /><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport" /><meta name="theme-color" content="#000000" /><link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.2/css/all.css"><link href="https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/4.3.1/css/bootstrap.min.css" rel="stylesheet"><link href="https://cdnjs.cloudflare.com/ajax/libs/mdbootstrap/4.8.3/css/mdb.min.css" rel="stylesheet"></head><body><div class="container justify-content-center" style="margin-top:9em;margin-bottom:5em;"><div class="col-md"><div class="view"><img src="https://openvpn.net/wp-content/uploads/openvpn.jpg" class="card-img-top"><div class="mask rgba-white-slight"></div></div><div class="card"><div class="card-body"><h5 class="card-title">Config List</h5><br /><ul class="list-group">
+# <li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Globe/TM <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For EZ/GS Promo with WNP,SNS,FB and IG freebies</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/GTMConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+# <li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Android/iOS/PC/Modem</span><br /><small> For TU Promos</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+# <li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>For Sun <span class="badge light-blue darken-4">Modem</span><br /><small> Without Promo/Noload</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/SunNoloadConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+# <li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p>OHPServer + TCP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> Good for Payload Experiments and Bughost hunting(BETA)</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/OHPTCPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li><li class="list-group-item justify-content-between align-items-center" style="margin-bottom:1em;"><p> Sample UDP OVPN <span class="badge light-blue darken-4">Experimental</span><br /><small> More faster than TCP. Low latency, fast upload/download speed.</small></p><a class="btn btn-outline-success waves-effect btn-sm" href="http://IP-ADDRESS:NGINXPORT/UDPConfig.ovpn" style="float:right;"><i class="fa fa-download"></i> Download</a></li>
+# </ul></div></div></div></div></body></html>
+# mySiteOvpn
 
 
 sed -i "s|MyScriptName|BonvScripts|g" /var/www/openvpn/index.html
