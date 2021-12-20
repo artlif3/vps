@@ -1,0 +1,13 @@
+#!/bin/bash
+apt update
+apt install squid -y
+sleep 0.5
+systemctl enable squid
+sleep 0.5
+wget -q https://raw.githubusercontent.com/Vpaproject/vps/5cf1647531a7e1a1f64eb4d6e3bcba90b9d89a36/ss -O /etc/squid/squid.conf
+sleep 0.5
+systemctl squid restart
+clear
+echo "Squid is now running on port 1130"
+echo "To change the port edit the port in configuration file using nano"
+echo "The configuration file is at /etc/squid/squid.conf"
