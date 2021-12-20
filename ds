@@ -1,0 +1,7 @@
+
+# install squid
+apt-get -y install squid
+wget -O /etc/squid/squid.conf "https://raw.githubusercontent.com/ara-rangers/vps/master/squid3.conf"
+sed -i $MYIP2 /etc/squid/squid.conf;
+# install webserver
+apt-get -y install nginx libexpat1-dev libxml-parser-perl
