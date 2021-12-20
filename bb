@@ -58,7 +58,7 @@ Php_Socket='9000'
 Fog_Openvpn_Monitoring='89'
 Tcp_Monitor_Port='450'
 Udp_Monitor_Port='451'
-Nginx_Port='85' 
+Nginx_Port='80' 
 
 # Server local time
 MyVPS_Time='Asia/Manila'
@@ -1029,6 +1029,8 @@ http_port 0.0.0.0:Squid_Port1
 http_port 0.0.0.0:Squid_Port2
 http_port 0.0.0.0:Squid_Port3
 ### Allow Headers
+acl all src 0.0.0.0/0
+http_access allow all
 request_header_access Allow allow all 
 request_header_access Authorization allow all 
 request_header_access WWW-Authenticate allow all 
