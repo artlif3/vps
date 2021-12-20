@@ -224,7 +224,7 @@ connect = 127.0.0.1:openssh_port_c
 
 [openvpn]
 accept = Stunnel_Port3
-connect = 127.0.0.1:openvpn_port_c
+connect = 127.0.0.1:OpenVPN_Port1
 MyStunnelC
 
  # setting stunnel ports
@@ -233,7 +233,7 @@ MyStunnelC
  sed -i "s|Stunnel_Port2|$Stunnel_Port2|g" /etc/stunnel/stunnel.conf
  sed -i "s|openssh_port_c|$(netstat -tlnp | grep -i ssh | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
  sed -i "s|Stunnel_Port3|$Stunnel_Port3|g" /etc/stunnel/stunnel.conf
- sed -i "s|openvpn_port_c|$(netstat -tlnp | grep -i openvpn | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
+ sed -i "s|OpenVPN_Port1|$(netstat -tlnp | grep -i openvpn | awk '{print $4}' | cut -d: -f2 | xargs | awk '{print $2}' | head -n1)|g" /etc/stunnel/stunnel.conf
 
  # Restarting stunnel service
  systemctl restart $StunnelDir
