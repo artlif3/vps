@@ -14,6 +14,7 @@ apt-get update
 apt-get upgrade -y
 apt-get install nginx
 apt-get autoremove -y
+apt-get install nginx ruby apt-transport-https lsb-release squid screenfetch -y
 
 # Installing OpenVPN by pulling its repository inside sources.list file 
  #rm -rf /etc/apt/sources.list.d/openvpn*
