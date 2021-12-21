@@ -793,8 +793,8 @@ fi
 read -e -p 'Input your Server IP: ' -i $SERVER_IP SERVER_IP
 read -e -p 'Input OpenVPN TCP Port: ' -i '1103' OPENVPN_PORT
 read -e -p 'Input Privoxy Port: ' -i '8081' PRIVOXY_PORT
-read -e -p 'Input ohpserver Port: ' -i '7752' OHP_PORT
-read -e -p 'Input stunnel Port: ' -i '587' STUNNEL_PORT
+read -e -p 'Input ohpserver Port: ' -i '8087' OHP_PORT
+read -e -p 'Input stunnel Port: ' -i '447' STUNNEL_PORT
 read -e -p 'Input DNS Tunnel Domain: ' -i 'dns.tunnel.example.com' DNS_TUNNEL_DOMAIN
 
 # Check input
@@ -1226,7 +1226,7 @@ remote "https://devvault.digi.com.my 443"
 port 443
 
 # This proxy uses as our main forwarder for OpenVPN tunnel.
-http-proxy $IPADDR 7752
+http-proxy $IPADDR 8087
 http-proxy-retry
 # We can also play our request headers here, everything are accepted, put them inside of a double-quotes.
 http-proxy-option VERSION 1.1
