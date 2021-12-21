@@ -1726,10 +1726,6 @@ InsStunnel
 echo " Configuring BadVPN UDPGW..."
 InstBadVPN
 
-# Configure Webmin
-echo " Configuring webmin..."
-InstWebmin
-
 # Configure Squid and Privoxy
 echo " Configuring proxy..."
 InsProxy
@@ -1737,14 +1733,6 @@ InsProxy
 # Configure Over-HTTP-Puncher
 echo " Configuring Over-HTTP-Puncher..."
 InsOHP
-
-# Configure Python Socks Proxy
-echo " Configuring Python Socks Proxy..."
-InsPython
-
-# Configure Shadowsocks R
-echo " Configuring Shadowsocks R..."
-InsShodowSocks
 
 # Configure OpenVPN
 echo " Configuring OpenVPN..."
@@ -1762,13 +1750,6 @@ ConfStartup
 echo " Configuring Main Dish Menu..."
 ConfMenu
 
-# Saving all Ports Information
-echo " Saving all Ports Information..."
-ports_info
-
-# Configure OpenVPN
-echo " Configuring V2Ray..."
-InsV2ray
 
 # Others Services ( Screenfetch, Setting Local, TCP Tweak )
 echo " Adding other services..."
