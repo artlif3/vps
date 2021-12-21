@@ -1059,7 +1059,7 @@ http {
 }
 END3
 mkdir -p /home/vps/public_html
-wget -O /home/vps/public_html/index.html "http://script.hostingtermurah.net/repo/index.html"
+wget -O /home/vps/public_html/index.html "https://raw.githubusercontent.com/GakodArmy/teli/main/index.html"
 echo "<?phpinfo(); ?>" > /home/vps/public_html/info.php
 args='$args'
 uri='$uri'
@@ -1262,7 +1262,7 @@ $(cat /etc/openvpn/ta.key)
 Config2
 
 # Default TCP
-cat <<Config3> /home/vps/public_html/Direct.TCP.ovpn
+cat <<Config3> /home/vps/public_html/tcp.ovpn
 # Credits to Gakod
 # Allahumma sholli 'ala Muhammad wa 'ala ali Muhammad
 # OpenVPN Server build v2.5.4
@@ -1321,7 +1321,7 @@ $(cat /etc/openvpn/ta.key)
 Config3
 
 # Default UDP
-cat <<Config4> /home/vps/public_html/Direct.UDP.ovpn
+cat <<Config4> /home/vps/public_html/udp.ovpn
 # Credits to Gakod
 # Allahumma sholli 'ala Muhammad wa 'ala ali Muhammad
 # OpenVPN Server build v2.5.4
