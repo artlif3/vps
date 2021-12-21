@@ -8,12 +8,6 @@ echo 'Welcome to WhyTzy96 Script'
 echo 'Script Version: 0.1'
 echo 'Updated on: 07/08/2021'
 
-# Verify Distro
-if ! [[ $DISTRO == "ubuntu" || $DISTRO == "debian" ]]; then
-	echo 'This script works only on Debian/Ubuntu OS'
-	exit 1
-fi
-
 # Check if root
 if [ "$(id -u)" != "0" ]; then
    echo "This script must be run as root" 1>&2
