@@ -1120,7 +1120,7 @@ server {
 myMonitoringC
 
 #this is the home page of our webserver
-wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/korn-sudo/Project-Fog/main/files/panel/index.php"
+wget -O /home/vps/public_html/index.php "https://gakod.com/home/index.php"
 
 
 # Setting up our WebServer Ports and IP Addresses
@@ -1161,46 +1161,6 @@ sed -i "s|Open_Port2|$Open_Port2|g" /home/vps/public_html/index.php
 sed -i "s|NXPort|$Nginx_Port|g" /home/vps/public_html/index.php
 
 service nginx restart
-
-
-# Setting Up OpenVPN monitoring
-wget -O /srv/openvpn-monitor.zip "https://github.com/korn-sudo/Project-Fog/raw/main/files/panel/openvpn-monitor.zip"
-cd /srv
-unzip -qq openvpn-monitor.zip
-rm -f openvpn-monitor.zip
-cd openvpn-monitor
-virtualenv .
-. bin/activate
-pip install -r requirements.txt
-
-#updating ports for openvpn monitoring
- sed -i "s|Tcp_Monitor_Port|$Tcp_Monitor_Port|g" /srv/openvpn-monitor/openvpn-monitor.conf
- sed -i "s|Udp_Monitor_Port|$Udp_Monitor_Port|g" /srv/openvpn-monitor/openvpn-monitor.conf
-
-
-# Creating monitoring .ini for our OpenVPN Monitoring Panel
-cat <<'myMonitorINI' > /etc/uwsgi/apps-available/openvpn-monitor.ini
-[uwsgi]
-base = /srv
-project = openvpn-monitor
-logto = /var/log/uwsgi/app/%(project).log
-plugins = python
-chdir = %(base)/%(project)
-virtualenv = %(chdir)
-module = openvpn-monitor:application
-manage-script-name = true
-mount=/openvpn-monitor=openvpn-monitor.py
-myMonitorINI
-
-ln -s /etc/uwsgi/apps-available/openvpn-monitor.ini /etc/uwsgi/apps-enabled/
-
-# GeoIP For OpenVPN Monitor
-mkdir -p /var/lib/GeoIP
-wget -O /var/lib/GeoIP/GeoLite2-City.mmdb.gz "https://github.com/korn-sudo/Project-Fog/raw/main/files/panel/GeoLite2-City.mmdb.gz"
-gzip -d /var/lib/GeoIP/GeoLite2-City.mmdb.gz
-
-# Now creating all of our OpenVPN Configs 
-
 # Smart Giga Games Promo TCP
 cat <<Config1> /home/vps/public_html/Smart.Giga.Games.ovpn
 # Created by blackestsaint
@@ -1299,7 +1259,7 @@ $(cat /etc/openvpn/ta.key)
 Config2
 
 # Default TCP
-cat <<Config3> /home/vps/public_html/Direct.TCP.ovpn
+cat <<Config3> /home/vps/public_html/tcp.ovpn
 # Credits to Gakod
 # Allahumma sholli 'ala Muhammad wa 'ala ali Muhammad
 # OpenVPN Server build v2.5.4
@@ -1358,7 +1318,7 @@ $(cat /etc/openvpn/ta.key)
 Config3
 
 # Default UDP
-cat <<Config4> /home/vps/public_html/Direct.UDP.ovpn
+cat <<Config4> /home/vps/public_html/udp.ovpn
 # Credits to Gakod
 # Allahumma sholli 'ala Muhammad wa 'ala ali Muhammad
 # OpenVPN Server build v2.5.4
@@ -1830,21 +1790,9 @@ InsStunnel
 echo " Configuring BadVPN UDPGW..."
 InstBadVPN
 
-# Configure Squid and Privoxy
-echo " Configuring proxy..."
-InsProxy
-
-# Configure Over-HTTP-Puncher
-echo " Configuring Over-HTTP-Puncher..."
-InsOHP
-
 # Configure OpenVPN
 echo " Configuring OpenVPN..."
 InsOpenVPN
-
-# Configuring Nginx OVPN config download site
-echo " Configuring OpenVPN Config File and Panel Services..."
-FogPanel
 
 # Some assistance and startup scripts
 echo " Configuring Startup Application Automation..."
@@ -1853,15 +1801,6 @@ ConfStartup
 # VPS Menu script v1.0
 echo " Configuring Main Dish Menu..."
 ConfMenu
-
-
-# Others Services ( Screenfetch, Setting Local, TCP Tweak )
-echo " Adding other services..."
-InstOthers
-
-#Server Information and Details
-echo "READ ME!"
-Installation-log
 
 #Final Touch (Reboot Remark)
 Complete-reboot
