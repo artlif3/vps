@@ -508,11 +508,8 @@ chown -R www-data:www-data /home/vps/public_html
 /etc/init.d/cron restart
 /etc/init.d/ssh restart
 /etc/init.d/dropbear restart
-/etc/init.d/fail2ban restart
+/etc/init.d/squid restart
 /etc/init.d/stunnel4 restart
-service php7.0-fpm restart
-service squid restart
-/etc/init.d/webmin restart
 
 # clearing history
 rm -rf ~/.bash_history && history -c
