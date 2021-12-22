@@ -200,19 +200,11 @@ service squid restart
 # wget -O /etc/openvpn/ "https://raw.githubusercontent.com/HRomie/obfs4proxy-openvpn/master/obfs4proxy-openvpn"
 # chmod +x /etc/openvn/obfs4proxy-openvpn
 
-# setting port ssh
-sed -i '/#Port 22/a Port 143' /etc/ssh/sshd_config
-sed -i '/#Port 22/a Port  90' /etc/ssh/sshd_config
-sed -i 's/#Port 22/Port  22/g' /etc/ssh/sshd_config
-/etc/init.d/ssh restart
-
-# install dropbear
+# dropbear
 apt-get -y install dropbear
-sed -i 's/NO_START=1/NO_START=0/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_PORT=22/DROPBEAR_PORT=442/g' /etc/default/dropbear
-sed -i 's/DROPBEAR_EXTRA_ARGS=/DROPBEAR_EXTRA_ARGS="-p 109 -p 110 -p 80"/g' /etc/default/dropbear
+wget -O /etc/default/dropbear "https://raw.githubusercontent.com/Vpaproject/-/3aca93b3470d2da6d32d42252da74d6976267eef/dropbear"
 echo "/bin/false" >> /etc/shells
-/etc/init.d/dropbear restart
+echo "/usr/sbin/nologin" >> /etc/shells
 
 # install stunnel
 apt install stunnel4 -y
@@ -225,11 +217,7 @@ socket = r:TCP_NODELAY=1
 
 [dropbear]
 accept = 446
-connect = 127.0.0.1:109
-
-[dropbear]
-accept = 777
-connect = 127.0.0.1:22
+connect = 127.0.0.1:800
 
 [openvpn]
 accept = 587
@@ -278,18 +266,6 @@ screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7600 --max-clients 1000
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7700 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7800 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
 screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:7900 --max-clients 1000 --max-connections-for-client 1000 > /dev/null &
-
-# install fail2ban
-apt-get -y install fail2ban
-
-# install ddos deflate
-cd
-apt-get -y install dnsutils dsniff
-wget https://gakod.com/all/premium/ddos-deflate-master.zip
-unzip ddos-deflate-master.zip
-cd ddos-deflate-master
-./install.sh
-rm -rf /root/ddos-deflate-master.zip
 
 # banner /etc/banner
 wget -O /etc/banner "https://gakod.com/all/premium/banner"
