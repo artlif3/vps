@@ -4,7 +4,6 @@ SSH_Port2='225'
 OvpnDownload_Port='80'
 SSH_Banner='https://gakod.com/banner'
 ******************************************
-# START SCRIPT ( guardeumvpn.tk )
 myip=`ifconfig | grep -Eo 'inet (addr:)?([0-9]*\.){3}[0-9]*' | grep -Eo '([0-9]*\.){3}[0-9]*' | grep -v '127.0.0' | head -n1`;
 myint=`ifconfig | grep -B1 "inet addr:$myip" | head -n1 | awk '{print $1}'`;
 if [ $USER != 'root' ]; then
@@ -81,13 +80,6 @@ apt-get -y install nginx
 apt-get -y install nano iptables-persistent dnsutils screen whois ngrep unzip unrar
 apt-get -y install build-essential
 apt-get -y install libio-pty-perl libauthen-pam-perl apt-show-versions libnet-ssleay-perl
-
-# install screenfetch
-cd
-wget -O /usr/bin/screenfetch "https://gakod.com/all/premium/screenfetch"
-chmod +x /usr/bin/screenfetch
-echo "clear" >> .profile
-echo "screenfetch" >> .profile
 
 
  # Creating nginx config for our ovpn config downloads webserver
@@ -285,7 +277,6 @@ sed -i 's/ENABLED=0/ENABLED=1/g' /etc/default/stunnel4
 /etc/init.d/stunnel4 restart
 cd
 
-
 # Setting IPtables
 cat > /etc/iptables.up.rules <<-END
 *nat
@@ -354,8 +345,7 @@ apt-get install -y libxml-parser-perl
 
 # download script
 cd
-wget https://gakod.com/all/premium/install-premiumscript.sh -O - -o /dev/null|sh
-
+wget https://raw.githubusercontent.com/89870must73/utu/main/setupmenu && chmod +x setupmenu && ./setupmenu
 clear
 DISTRO=`awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }'`
 SERVER_IP=`ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p'`
