@@ -29,7 +29,7 @@ Stunnel_Port3='445' # through Openvpn
 
 # OpenVPN Ports
 OpenVPN_TCP_Port='1103'
-OpenVPN_UDP_Port='3900'
+OpenVPN_UDP_Port='25222'
 
 # Privoxy Ports
 Privoxy_Port1='9880'
@@ -793,50 +793,6 @@ clear
 DISTRO=`awk '/^ID=/' /etc/*-release | awk -F'=' '{ print tolower($2) }'`
 SERVER_IP=`ip -o route get to 8.8.8.8 | sed -n 's/.*src \([0-9.]\+\).*/\1/p'`
 
-# Welcome Message
-echo 'Welcome to WhyTzy96 Script'
-echo 'Script Version: 0.1'
-echo 'Updated on: 07/08/2021'
-
-# Verify Distro
-if ! [[ $DISTRO == "ubuntu" || $DISTRO == "debian" ]]; then
-	echo 'This script works only on Debian/Ubuntu OS'
-	exit 1
-fi
-
-# Check if root
-if [ "$(id -u)" != "0" ]; then
-   echo "This script must be run as root" 1>&2
-   exit 1
-fi
-
-
-if test -f "/root/.tcat_installed"; then
-	echo 'TunnelCat VPN Software already installed!'
-	exit 1
-fi
-
-#PORT SERVER
-read -e -p 'Input your Server IP: ' -i $SERVER_IP SERVER_IP
-read -e -p 'Input OpenVPN TCP Port: ' -i '1103' OPENVPN_PORT
-read -e -p 'Input Privoxy Port: ' -i '8081' PRIVOXY_PORT
-read -e -p 'Input ohpserver Port: ' -i '7752' OHP_PORT
-read -e -p 'Input stunnel Port: ' -i '587' STUNNEL_PORT
-read -e -p 'Input DNS Tunnel Domain: ' -i 'dns.tunnel.example.com' DNS_TUNNEL_DOMAIN
-
-# Check input
-echo 'Checking Input...'
-if ! [[ $SERVER_IP =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
-	echo 'Server IP is invalid'
-	exit 1
-fi
-
-if ! [[ $OPENVPN_PORT =~ ^[0-9]+$ || $OHP_PORT =~ ^[0-9]+$ || $PRIVOXY_PORT =~ ^[0-9]+$ || $STUNNEL_PORT =~ ^[0-9]+$ ]]; then
-	echo 'Port is invalid'
-	exit 1
-fi
-
-echo 'Proceeding with the installation of dependencies'
 
 # Install Dependencies
 echo 'Installing Dependencies'
@@ -864,7 +820,7 @@ actionsfile user.action
 filterfile default.filter
 filterfile user.filter
 logfile logfile
-listen-address  :$PRIVOXY_PORT
+listen-address  :8081
 toggle 1
 enable-remote-toggle  0
 enable-remote-http-toggle  0
@@ -898,7 +854,7 @@ Description=Daemonize OpenHTTP Puncher Server
 Wants=network.target
 After=network.target
 [Service]
-ExecStart=/usr/local/bin/ohpserver -port $OHP_PORT -proxy 127.0.0.1:$PRIVOXY_PORT -tunnel $SERVER_IP:$OPENVPN_PORT
+ExecStart=/usr/local/bin/ohpserver -port 8087 -proxy 127.0.0.1:8081 -tunnel $SERVER_IP:1103
 Restart=always
 RestartSec=3
 [Install]
@@ -913,7 +869,7 @@ user = nobody
 chroot = /tmp
 pid_file = /var/run/dns2tcp.pid
 domain = $DNS_TUNNEL_DOMAIN
-resources = ovpn:$SERVER_IP:$OPENVPN_PORT
+resources = ovpn:$SERVER_IP:1103
 EOF
 
 # Start Services
