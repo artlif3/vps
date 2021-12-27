@@ -997,18 +997,109 @@ mySquid
 
 function FogPanel(){
 
-# nginx
-apt-get -y install nginx php-fpm php-mcrypt php-cli libexpat1-dev libxml-parser-perl
-rm /etc/nginx/sites-enabled/default
-rm /etc/nginx/sites-available/default
-wget -O /etc/php/7.0/fpm/pool.d/www.conf "https://raw.githubusercontent.com/ehomecore/deb-ubun/master/www.conf"
+rm /home/vps/public_html -rf
+rm /etc/nginx/sites-* -rf
+rm /etc/nginx/nginx.conf -rf
+sleep 1
 mkdir -p /home/vps/public_html
-echo "<?php phpinfo(); ?>" > /home/vps/public_html/info.php
-wget -O /home/vps/public_html/index.html https://raw.githubusercontent.com/GakodArmy/teli/main/index.html
-wget -O /etc/nginx/conf.d/vps.conf "https://raw.githubusercontent.com/ehomecore/deb-ubun/master/vps.conf"
-sed -i 's/listen = \/var\/run\/php7.0-fpm.sock/listen = 127.0.0.1:9000/g' /etc/php/7.0/fpm/pool.d/www.conf
-service nginx restart
-service php7.0-fpm restart
+
+# Creating nginx config for our webserver
+cat <<'myNginxC' > /etc/nginx/nginx.conf
+
+user www-data;
+
+worker_processes 1;
+pid /var/run/nginx.pid;
+
+events {
+	multi_accept on;
+  worker_connections 1024;
+}
+
+http {
+	gzip on;
+	gzip_vary on;
+	gzip_comp_level 5;
+	gzip_types    text/plain application/x-javascript text/xml text/css;
+
+	autoindex on;
+  sendfile on;
+  tcp_nopush on;
+  tcp_nodelay on;
+  keepalive_timeout 65;
+  types_hash_max_size 2048;
+  server_tokens off;
+  include /etc/nginx/mime.types;
+  default_type application/octet-stream;
+  access_log /var/log/nginx/access.log;
+  error_log /var/log/nginx/error.log;
+  client_max_body_size 32M;
+	client_header_buffer_size 8m;
+	large_client_header_buffers 8 8m;
+
+	fastcgi_buffer_size 8m;
+	fastcgi_buffers 8 8m;
+
+	fastcgi_read_timeout 600;
+
+
+  include /etc/nginx/conf.d/*.conf;
+}
+
+myNginxC
+
+# Creating vps config for our OCS Panel
+cat <<'myvpsC' > /etc/nginx/conf.d/vps.conf
+server {
+  listen       Nginx_Port;
+  server_name  127.0.0.1 localhost;
+  access_log /var/log/nginx/vps-access.log;
+  error_log /var/log/nginx/vps-error.log error;
+  root   /home/vps/public_html;
+
+  location / {
+    index  index.html index.htm index.php;
+    try_files $uri $uri/ /index.php?$args;
+  }
+
+  location ~ \.php$ {
+    include /etc/nginx/fastcgi_params;
+    fastcgi_pass  127.0.0.1:Php_Socket;
+    fastcgi_index index.php;
+    fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+  }
+}
+
+myvpsC
+
+# Creating monitoring config for our OpenVPN Monitoring Panel
+cat <<'myMonitoringC' > /etc/nginx/conf.d/monitoring.conf
+
+server {
+    listen Fog_Openvpn_Monitoring;
+    location / {
+        uwsgi_pass unix:///run/uwsgi/app/openvpn-monitor/socket;
+        include uwsgi_params;
+    }
+}
+
+myMonitoringC
+
+#this is the home page of our webserver
+wget -O /home/vps/public_html/index.php "https://raw.githubusercontent.com/korn-sudo/Project-Fog/main/files/panel/index.php"
+
+
+# Setting up our WebServer Ports and IP Addresses
+cd
+sleep 1
+
+sed -i "s|/run/php/php7.0-fpm.sock|127.0.0.1:$Php_Socket|g" /etc/php/7.0/fpm/pool.d/www.conf
+sed -i "s|Php_Socket|$Php_Socket|g" /etc/nginx/conf.d/vps.conf
+sed -i "s|Nginx_Port|$Nginx_Port|g" /etc/nginx/conf.d/vps.conf
+sed -i "s|Fog_Openvpn_Monitoring|$Fog_Openvpn_Monitoring|g" /etc/nginx/conf.d/monitoring.conf
+sed -i "s|Fog_Openvpn_Monitoring|$Fog_Openvpn_Monitoring|g" /home/vps/public_html/index.php
+sed -i "s|fogserverip|$IPADDR|g" /home/vps/public_html/index.php
+sed -i "s|v2portas|65432|g" /home/vps/public_html/index.php
 
 # Setting up our WebServer Ports and IP Addresses
 cd
