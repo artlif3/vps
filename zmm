@@ -1,0 +1,371 @@
+#!/usr/bin/env bash
+# OpenVPN  automated installer for Debian, Ubuntu and CentOS
+
+# This script will work on Debian, Ubuntu, CentOS and probably other distros
+# of the same families. This is a completely automated install no user input necessary..
+# The script will use pre-defined values that can be changed manually in script.
+# This script also assume server is behind NAT.
+
+newclient () {
+	# Generates the custom client.ovpn
+	{
+	cat /etc/openvpn/client-common.txt
+	echo "<ca>"
+	cat /etc/openvpn/easy-rsa/pki/ca.crt
+	echo "</ca>"
+	echo "<cert>"
+	sed -ne '/BEGIN CERTIFICATE/,$ p' /etc/openvpn/easy-rsa/pki/issued/"$1".crt
+	echo "</cert>"
+	echo "<key>"
+	cat /etc/openvpn/easy-rsa/pki/private/"$1".key
+	echo "</key>"
+	echo "<tls-crypt>"
+	sed -ne '/BEGIN OpenVPN Static key/,$ p' /etc/openvpn/tc.key
+	echo "</tls-crypt>"
+	} > ~/"$1".ovpn
+}
+
+# Get external IP assumed behind NAT
+IP=$(wget -4qO- "http://whatismyip.akamai.com/" || curl -4Ls "http://whatismyip.akamai.com/")
+# initializing var
+export DEBIAN_FRONTEND=noninteractive
+OS=`uname -m`;
+MYIP=$(wget -qO- ipv4.icanhazip.com);
+MYIP2="s/xxxxxxxxx/$MYIP/g";
+cd /root
+wget "https://raw.githubusercontent.com/radzvpn/TNTNOLOADDNS/master/plugin.tgz"
+
+PORT1=1103
+PORT2=25222
+CLIENT=sam
+GROUPNAME="nogroup"
+
+apt-get update
+apt-get update
+apt-get install openvpn iptables openssl ca-certificates -y
+
+
+# Remove old version of easy-rsa that was available by default in some openvpn packages
+if [[ -d /etc/openvpn/easy-rsa/ ]]; then
+	rm -rf /etc/openvpn/easy-rsa/
+fi
+
+# Get easy-rsa
+EASYRSAURL='https://github.com/OpenVPN/easy-rsa/releases/download/v3.0.7/EasyRSA-3.0.7.tgz'
+wget -O ~/easyrsa.tgz "$EASYRSAURL" 2>/dev/null || curl -Lo ~/easyrsa.tgz "$EASYRSAURL"
+tar xzf ~/easyrsa.tgz -C ~/
+mv ~/EasyRSA-3.0.7/ /etc/openvpn/
+mv /etc/openvpn/EasyRSA-3.0.7/ /etc/openvpn/easy-rsa/
+chown -R root:root /etc/openvpn/easy-rsa/
+rm -f ~/easyrsa.tgz
+cd /etc/openvpn/easy-rsa/
+
+# Workaround to remove unharmful error until easy-rsa 3.0.7
+# https://github.com/OpenVPN/easy-rsa/issues/261
+sed -i 's/^RANDFILE/#RANDFILE/g' /etc/openvpn/easy-rsa/openssl-easyrsa.cnf
+
+# Create the PKI, set up the CA, the DH params and the server + client certificates
+./easyrsa init-pki
+./easyrsa --batch build-ca nopass
+EASYRSA_CERT_EXPIRE=3650 ./easyrsa build-server-full server nopass
+EASYRSA_CERT_EXPIRE=3650 ./easyrsa build-client-full "$CLIENT" nopass
+EASYRSA_CRL_DAYS=3650 ./easyrsa gen-crl
+# Move some files
+cp pki/ca.crt pki/private/ca.key pki/issued/server.crt pki/private/server.key pki/crl.pem /etc/openvpn/
+# CRL is read with each client connection, when OpenVPN is dropped to nobody
+chown nobody:"$GROUPNAME" /etc/openvpn/crl.pem
+# Generate key for tls-crypt
+openvpn --genkey --secret /etc/openvpn/tc.key
+
+# Use predefined ffdhe2048 group
+
+echo '-----BEGIN DH PARAMETERS-----
+MIIBCAKCAQEA//////////+t+FRYortKmq/cViAnPTzx2LnFg84tNpWp4TZBFGQz
++8yTnc4kmz75fS/jY2MMddj2gbICrsRhetPfHtXV/WVhJDP1H18GbtCFY2VVPe0a
+87VXE15/V8k1mE8McODmi3fipona8+/och3xWKE2rec1MKzKT0g6eXq8CrGCsyT7
+YdEIqUuyyOP7uWrat2DX9GgdT0Kj3jlN9K5W7edjcrsZCwenyO4KbXCeAvzhzffi
+7MA0BM0oNC9hkXL+nOmFg/+OTxIy7vKBg8P+OxtMb61zO7X8vC7CIAXFjvGDfRaD
+ssbzSibBsu/6iGtCOGEoXJf//////////wIBAg==
+-----END DH PARAMETERS-----' > /etc/openvpn/dh.pem
+
+# Setting Server
+tar -xzvf /root/plugin.tgz -C /usr/lib/openvpn/
+chmod +x /usr/lib/openvpn/*
+cat > /etc/openvpn/server_tcp.conf <<-END
+port 1103
+proto tcp
+dev tun
+dev-type tun
+sndbuf 0
+rcvbuf 0
+ca ca.crt
+cert server.crt
+key server.key
+tls-auth ta.key 0
+dh dh.pem
+crl-verify crl.pem
+topology subnet
+server 10.9.0.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "redirect-gateway def1 bypass-dhcp"
+push "dhcp-option DNS 8.8.8.8"
+push "dhcp-option DNS 8.8.4.4"
+keepalive 10 120
+cipher AES-256-CBC
+auth SHA256
+comp-lzo
+user nobody
+group nogroup
+persist-tun
+status openvpn-status.log
+verb 2
+mute 3
+verify-client-cert none
+username-as-common-name
+plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
+
+END
+
+cat > /etc/openvpn/server_udp.conf <<-END
+port 25222
+proto udp
+dev tun
+user nobody
+group nogroup
+persist-key
+persist-tun
+keepalive 10 120
+topology subnet
+server 10.8.0.0 255.255.255.0
+ifconfig-pool-persist ipp.txt
+push "dhcp-option DNS 1.0.0.1"
+push "dhcp-option DNS 1.1.1.1"
+push "redirect-gateway def1 bypass-dhcp" 
+crl-verify crl.pem
+ca ca.crt
+cert server.crt
+key server.key
+tls-auth ta.key 0
+dh dh.pem
+auth SHA256
+cipher AES-128-CBC
+tls-server
+tls-version-min 1.2
+tls-cipher TLS-DHE-RSA-WITH-AES-128-GCM-SHA256
+status openvpn.log
+verb 3
+verify-client-cert none
+username-as-common-name
+plugin /usr/lib/openvpn/plugins/openvpn-plugin-auth-pam.so login
+
+END
+
+# Enable net.ipv4.ip_forward for the system
+echo 'net.ipv4.ip_forward=1' > /etc/sysctl.d/30-openvpn-forward.conf
+echo 1 > /proc/sys/net/ipv4/ip_forward
+
+# Set NAT for the VPN subnet
+ufw allow ssh
+ufw allow 1103/tcp
+ufw allow 25222/udp
+echo "
+
+# START OPENVPN RULES
+# NAT table rules
+*nat
+:POSTROUTING ACCEPT [0:0]
+# Allow traffic from OpenVPN client to eth0
+-A POSTROUTING -s 10.8.0.0/8 -o eth0 -j MASQUERADE
+COMMIT
+# END OPENVPN RULES
+" >> /etc/ufw/before.rules
+sed -i s/DEFAULT_FORWARD_POLICY\=\"DROP\"/DEFAULT_FORWARD_POLICY\=\"ACCEPT\"/ /etc/default/ufw
+ufw disable
+echo "y" | ufw enable
+
+# restart OpenVPN
+systemctl restart openvpn@server.service
+
+# client-common.txt is created so we have a template to add further users later
+echo "client
+dev tun
+proto tcp
+sndbuf 0
+rcvbuf 0
+remote $IP $PORT
+route-method exe
+resolv-retry infinite
+nobind
+persist-key
+persist-tun
+comp-lzo
+cipher AES-256-CBC
+auth SHA256
+push "redirect-gateway def1 bypass-dhcp"
+verb 3
+push-peer-info
+ping 10
+ping-restart 60
+hand-window 70
+server-poll-timeout 4
+reneg-sec 2592000
+remote-cert-tls server
+key-direction 1
+<auth-user-pass>
+sam
+sam
+</auth-user-pass>
+verb 3" > /etc/openvpn/client-common.txt
+
+# Generates the custom client.ovpn
+newclient "$CLIENT"
+
+echo ""
+echo -e "\033[35;1m { install nginx }  "
+echo ""
+	cd
+	apt-get -y install nginx
+	cat > /etc/nginx/nginx.conf <<END
+user www-data;
+worker_processes 2;
+pid /var/run/nginx.pid;
+events {
+	multi_accept on;
+        worker_connections 1024;
+}
+http {
+	autoindex on;
+        sendfile on;
+        tcp_nopush on;
+        tcp_nodelay on;
+        keepalive_timeout 65;
+        types_hash_max_size 2048;
+        server_tokens off;
+        include /etc/nginx/mime.types;
+        default_type application/octet-stream;
+        access_log /var/log/nginx/access.log;
+        error_log /var/log/nginx/error.log;
+        client_max_body_size 32M;
+	client_header_buffer_size 8m;
+	large_client_header_buffers 8 8m;
+	fastcgi_buffer_size 8m;
+	fastcgi_buffers 8 8m;
+	fastcgi_read_timeout 600;
+        include /etc/nginx/conf.d/*.conf;
+}
+END
+	mkdir -p /home/vps/public_html
+	echo "<pre>by MyGatherBK | MyGatherBK</pre>" > /home/vps/public_html/index.html
+	echo "<?phpinfo(); ?>" > /home/vps/public_html/info.php
+	args='$args'
+	uri='$uri'
+	document_root='$document_root'
+	fastcgi_script_name='$fastcgi_script_name'
+	cat > /etc/nginx/conf.d/vps.conf <<END
+server {
+    listen       85;
+    server_name  127.0.0.1 localhost;
+    access_log /var/log/nginx/vps-access.log;
+    error_log /var/log/nginx/vps-error.log error;
+    root   /home/vps/public_html;
+    location / {
+        index  index.html index.htm index.php;
+	try_files $uri $uri/ /index.php?$args;
+    }
+    location ~ \.php$ {
+        include /etc/nginx/fastcgi_params;
+        fastcgi_pass  127.0.0.1:9000;
+        fastcgi_index index.php;
+        fastcgi_param SCRIPT_FILENAME $document_root$fastcgi_script_name;
+    }
+}
+END
+
+
+
+
+# Configure menu
+wget -O /usr/local/bin/menu "https://raw.githubusercontent.com/ara-rangers/vps/master/menu"
+wget -O /usr/local/bin/m "https://raw.githubusercontent.com/ara-rangers/vps/master/menu"
+wget -O /usr/local/bin/autokill "https://raw.githubusercontent.com/ara-rangers/vps/master/autokill"
+wget -O /usr/local/bin/user-generate "https://raw.githubusercontent.com/ara-rangers/vps/master/user-generate"
+wget -O /usr/local/bin/speedtest "https://raw.githubusercontent.com/ara-rangers/vps/master/speedtest"
+wget -O /usr/local/bin/user-lock "https://raw.githubusercontent.com/ara-rangers/vps/master/user-lock"
+wget -O /usr/local/bin/user-unlock "https://raw.githubusercontent.com/ara-rangers/vps/master/user-unlock"
+wget -O /usr/local/bin/auto-reboot "https://raw.githubusercontent.com/ara-rangers/vps/master/auto-reboot"
+wget -O /usr/local/bin/user-password "https://raw.githubusercontent.com/ara-rangers/vps/master/user-password"
+wget -O /usr/local/bin/trial "https://raw.githubusercontent.com/ara-rangers/vps/master/trial"
+wget -O /etc/pam.d/common-password "https://raw.githubusercontent.com/ara-rangers/vps/master/common-password"
+chmod +x /etc/pam.d/common-password
+chmod +x /usr/local/bin/menu
+chmod +x /usr/local/bin/m
+chmod +x /usr/local/bin/autokill 
+chmod +x /usr/local/bin/user-generate 
+chmod +x /usr/local/bin/speedtest 
+chmod +x /usr/local/bin/user-unlock
+chmod +x /usr/local/bin/user-lock
+chmod +x /usr/local/bin/auto-reboot
+chmod +x /usr/local/bin/user-password
+chmod +x /usr/local/bin/trial 
+	apt-get -y install vnstat
+	cd /etc/openvpn/easy-rsa/
+	./easyrsa build-client-full $CLIENT nopass
+	newclient "$CLIENT"
+	cp /root/$CLIENT.ovpn /home/vps/public_html/
+	rm -f /root/$CLIENT.ovpn
+	case $OPENVPNSYSTEM in
+		2)
+		useradd $Usernames
+		echo -e "$Passwords\n$Passwords\n"|passwd $Usernames &> /dev/null
+		;;
+	esac
+	clear
+echo ""
+echo ""
+echo -e "\033[34;1m =============== OS-32 & 64-bit =================    "
+echo -e "\033[36;1m #        AUTOSCRIPT CREATED BY PeeRaPoN         #    "
+echo -e "\033[33;1m #      -----------About Us------------         #    "
+echo -e "\033[31;1m #    OS  DEBIAN 7-8-9  OS  UBUNTU 14-16-18     #    "
+echo -e "\033[0;32m #       Truemoney Wallet : 095-215-5825        #    "
+echo -e "\033[35;1m #               { VPN / SSH }                  #    "
+echo -e "\033[0;32m #         BY : PeeRaPoN MueAnGChaN               #    "
+echo -e "\033[0;32m #    FB : https://m.me/Amkoonp       #    "
+echo -e "\033[34;1m =============== OS-32 & 64-bit =================    "
+echo -e "\033[34;1m  ไอพีเซิฟ: $IP "
+echo ""
+echo ""
+	echo "OpenVPN, Squid Proxy, Nginx .....Install finish."
+	echo "IP Server : $IP"
+	echo "Port Server : $PORT"
+	if [[ "$PROTOCOL" = 'udp' ]]; then
+		echo "Protocal : UDP"
+	elif [[ "$PROTOCOL" = 'tcp' ]]; then
+		echo "Protocal : TCP"
+	fi
+	echo "Port Nginx : 85"
+	echo "IP Proxy : $IP"
+	echo "Port Proxy : $PROXY"
+	echo ""
+	case $OPENVPNSYSTEM in
+		1)
+		echo "Download My Config : http://$IP:85/$CLIENT.ovpn"
+		;;
+		2)
+		echo "Download Config : http://$IP:85/$CLIENT.ovpn"
+		echo ""
+		echo "Your Username : $Usernames"
+		echo "Your Password : $Passwords"
+		echo "Expire : Never"
+		;;
+		3)
+		echo "Download Config : http://$IP:85/$CLIENT.ovpn"
+		;;
+	esac
+	echo ""
+	echo ""
+	echo "===================================================================="
+	echo -e "ติดตั้งสำเร็จ... กรุณาพิมพ์คำสั่ง${GRAY} menu ${NC} เพื่อไปยังขั้นตอนถัดไป"
+	echo "===================================================================="
+	echo ""
+	exit
+		
